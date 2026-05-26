@@ -110,7 +110,7 @@ do
   vim.o.number = true
   -- You can also add relative line numbers, to help with jumping.
   --  Experiment for yourself to see if you like it!
-  -- vim.o.relativenumber = true
+  vim.o.relativenumber = true
 
   -- Enable mouse mode, can be useful for resizing splits for example!
   vim.o.mouse = 'a'
@@ -699,6 +699,37 @@ do
 
     stylua = {}, -- Used to format Lua code
 
+    -- Python
+    pyright = {
+      settings = {
+        python = {
+          analysis = {
+            autoSearchPaths = true,
+            diagnosticMode = "workspace",
+            useLibraryCodeForTypes = true
+          }
+        }
+      }
+    },
+
+    -- Rust
+    rust_analyzer = {
+      settings = {
+        ['rust-analyzer'] = {
+          cargo = {
+            allFeatures = true,
+          },
+          checkOnSave = true,
+          check = {
+            command = "clippy",
+          },
+        }
+      }
+    },
+
+    -- Elixir
+    elixirls = {},
+
     -- Special Lua Config, as recommended by neovim help docs
     lua_ls = {
       on_init = function(client)
@@ -753,6 +784,15 @@ do
   -- You can press `g?` for help in this menu.
   local ensure_installed = vim.tbl_keys(servers or {})
   vim.list_extend(ensure_installed, {
+    -- Python tools
+    'black',     -- Python formatter
+    'isort',     -- Python import sorter
+    'ruff',      -- Python linter
+    
+    -- Rust tools (rustfmt is usually included with rust toolchain)
+    
+    -- Elixir tools (mix is included with Elixir installation)
+    
     -- You can add other tools here that you want Mason to install
   })
 
@@ -777,7 +817,9 @@ do
       -- You can specify filetypes to autoformat on save here:
       local enabled_filetypes = {
         -- lua = true,
-        -- python = true,
+        python = true,
+        rust = true,
+        elixir = true,
       }
       if enabled_filetypes[vim.bo[bufnr].filetype] then
         return { timeout_ms = 500 }
@@ -790,7 +832,9 @@ do
     },
     -- You can also specify external formatters in here.
     formatters_by_ft = {
-      -- rust = { 'rustfmt' },
+      python = { "isort", "black" },
+      rust = { "rustfmt" },
+      elixir = { "mix" },
       -- Conform can also run multiple formatters sequentially
       -- python = { "isort", "black" },
       --
