@@ -219,6 +219,11 @@ do
   -- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
   -- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 
+  -- Buffer navigation
+  vim.keymap.set('n', '[b', '<cmd>bp<cr>', { silent = true, desc = 'Previous buffer' })
+  vim.keymap.set('n', ']b', '<cmd>bn<cr>', { silent = true, desc = 'Next buffer' })
+  vim.keymap.set('n', '<leader>bd', '<cmd>bd<cr>', { silent = true, desc = 'Delete buffer' })
+
   -- Keybinds to make split navigation easier.
   --  Use CTRL+<hjkl> to switch between windows
   --
@@ -370,6 +375,7 @@ do
     icons = { mappings = vim.g.have_nerd_font },
     -- Document existing key chains
     spec = {
+      { '<leader>b', group = '[B]uffers' },
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
@@ -426,18 +432,21 @@ do
   -- - sr)'  - [S]urround [R]eplace [)] [']
   require('mini.surround').setup()
 
-  -- Simple and easy statusline.
-  --  You could remove this setup call if you don't like it,
-  --  and try some other statusline plugin
-  local statusline = require 'mini.statusline'
-  -- Set `use_icons` to true if you have a Nerd Font
-  statusline.setup { use_icons = vim.g.have_nerd_font }
-
-  -- You can configure sections in the statusline by overriding their
-  -- default behavior. For example, here we set the section for
-  -- cursor location to LINE:COLUMN
-  ---@diagnostic disable-next-line: duplicate-set-field
-  statusline.section_location = function() return '%2l:%-2v' end
+  -- Set lualine as statusline
+  -- See `:help lualine.txt`
+  vim.pack.add { gh 'nvim-lualine/lualine.nvim' }
+  require('lualine').setup {
+    options = {
+      icons_enabled = false,
+      theme = 'onedark',
+      component_separators = '|',
+      section_separators = '',
+    },
+    tabline = {
+      lualine_a = { 'buffers' },
+      lualine_z = { 'tabs' },
+    },
+  }
 
   -- ... and there is more!
   --  Check out: https://github.com/nvim-mini/mini.nvim
@@ -816,10 +825,12 @@ do
     format_on_save = function(bufnr)
       -- You can specify filetypes to autoformat on save here:
       local enabled_filetypes = {
-        -- lua = true,
+        lua = true,
         python = true,
         rust = true,
         elixir = true,
+        javascript = true,
+        typescript = true,
       }
       if enabled_filetypes[vim.bo[bufnr].filetype] then
         return { timeout_ms = 500 }
@@ -832,14 +843,12 @@ do
     },
     -- You can also specify external formatters in here.
     formatters_by_ft = {
-      python = { "isort", "black" },
-      rust = { "rustfmt" },
-      elixir = { "mix" },
-      -- Conform can also run multiple formatters sequentially
-      -- python = { "isort", "black" },
-      --
-      -- You can use 'stop_after_first' to run the first available formatter from the list
-      -- javascript = { "prettierd", "prettier", stop_after_first = true },
+      lua = { 'lua_ls' },
+      python = { 'isort', 'black' },
+      rust = { 'rustfmt' },
+      elixir = { 'mix' },
+      javascript = { { 'prettierd', 'prettier' }, { 'eslint_d', 'eslint' } },
+      typescript = { { 'prettierd', 'prettier' }, { 'eslint_d', 'eslint' } },
     },
   }
 
@@ -942,7 +951,7 @@ do
   vim.pack.add { { src = gh 'nvim-treesitter/nvim-treesitter', version = 'main' } }
 
   -- Ensure basic parsers are installed
-  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' }
+  local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'cpp', 'elixir', 'python', 'rust', 'javascript', 'typescript', 'eex', 'heex'}
   require('nvim-treesitter').install(parsers)
 
   ---@param buf integer
@@ -1014,7 +1023,7 @@ do
   -- NOTE: You can add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- require 'custom.plugins'
+  require 'custom.plugins'
 end
 
 -- The line beneath this is called `modeline`. See `:help modeline`

@@ -2,6 +2,9 @@
 --  I promise not to create any merge conflicts in this directory :)
 --
 -- See the kickstart.nvim README for more information
+--
+-- Plugin modules in this folder use vim.pack (not lazy.nvim). Each `*.lua` file
+-- (except this one) is loaded automatically at the end of init.lua.
 
 -- Iterate over all Lua files in the plugins directory and load them
 local plugins_dir = vim.fs.joinpath(vim.fn.stdpath 'config', 'lua', 'custom', 'plugins')
