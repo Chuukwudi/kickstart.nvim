@@ -829,6 +829,8 @@ do
         python = true,
         rust = true,
         elixir = true,
+        heex = true,
+        eelixir = true,
         javascript = true,
         typescript = true,
       }
@@ -847,6 +849,8 @@ do
       python = { 'isort', 'black' },
       rust = { 'rustfmt' },
       elixir = { 'mix' },
+      heex = { 'mix' },
+      eelixir = { 'mix' },
       javascript = { { 'prettierd', 'prettier' }, { 'eslint_d', 'eslint' } },
       typescript = { { 'prettierd', 'prettier' }, { 'eslint_d', 'eslint' } },
     },
