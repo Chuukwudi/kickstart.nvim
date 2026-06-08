@@ -11,6 +11,39 @@ vim.pack.add {
 }
 
 require('codecompanion').setup {
+  adapters = {
+    acp = {
+      claude_code = function()
+        return require('codecompanion.adapters').extend('claude_code', {
+          handlers = {
+            auth = function(self)
+              local token = self.env_replaced and self.env_replaced.CLAUDE_CODE_OAUTH_TOKEN
+              if token and token ~= '' then
+                vim.env.CLAUDE_CODE_OAUTH_TOKEN = token
+              end
+              -- Claude CLI auth lives in ~/.claude when no token env is set
+              return true
+            end,
+            form_messages = function(self, messages, capabilities)
+              local helpers = require('codecompanion.adapters.acp.helpers')
+              local blocks = helpers.form_messages(self, messages, capabilities)
+              blocks = vim.tbl_filter(function(block)
+                if not block then return false end
+                if block.type == 'text' then
+                  return block.text and block.text ~= ''
+                end
+                return true
+              end, blocks)
+              if #blocks == 0 then
+                return { { type = 'text', text = '<prompt></prompt>' } }
+              end
+              return blocks
+            end,
+          },
+        })
+      end,
+    },
+  },
   display = {
     diff = {
       enabled = true,
@@ -24,6 +57,9 @@ require('codecompanion').setup {
   interactions = {
     chat = {
       adapter = 'claude_code',
+      opts = {
+        blank_prompt = '<prompt></prompt>',
+      },
       tools = {
         opts = {
           notify_on_approval = true,
