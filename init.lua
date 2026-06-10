@@ -923,6 +923,17 @@ do
 
     sources = {
       default = { 'lsp', 'path', 'snippets' },
+      -- CodeCompanion registers its own source for chat buffers (/commands, #context)
+      per_filetype = {
+        codecompanion = { 'codecompanion', 'lsp', 'path', 'snippets' },
+        codecompanion_input = { 'codecompanion', 'lsp', 'path', 'snippets' },
+      },
+      providers = {
+        codecompanion = {
+          name = 'CodeCompanion',
+          module = 'codecompanion.providers.completion.blink',
+        },
+      },
     },
 
     snippets = { preset = 'luasnip' },

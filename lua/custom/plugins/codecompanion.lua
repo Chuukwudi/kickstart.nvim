@@ -59,11 +59,19 @@ require('codecompanion').setup {
       adapter = 'claude_code',
       opts = {
         blank_prompt = '<prompt></prompt>',
+        completion_provider = 'blink',
       },
       tools = {
         opts = {
           notify_on_approval = true,
         },
+      },
+    },
+    -- Inline edits use the HTTP API (not Claude Code CLI). Set ANTHROPIC_API_KEY.
+    inline = {
+      adapter = {
+        name = 'anthropic',
+        model = 'claude-haiku-4-5',
       },
     },
     cli = {
@@ -84,6 +92,7 @@ vim.keymap.set('n', '<leader>cc', '<cmd>CodeCompanionChat Toggle<cr>', { desc = 
 vim.keymap.set('n', '<leader>ca', '<cmd>CodeCompanionChat<cr>', { desc = 'Open AI [C]hat' })
 vim.keymap.set('n', '<leader>ci', '<cmd>CodeCompanionCLI<cr>', { desc = 'Open Claude Code [C]LI' })
 vim.keymap.set('v', '<leader>ca', '<cmd>CodeCompanionChat<cr>', { desc = 'Chat about visual selection' })
+vim.keymap.set({ 'n', 'v' }, '<leader>cp', '<cmd>CodeCompanion<cr>', { desc = 'AI inline [P]rompt' })
 
 vim.keymap.set('n', '<leader>cg', function()
   require('telescope.builtin').git_status()
