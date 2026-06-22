@@ -213,6 +213,126 @@ do
   -- or just use <C-\><C-n> to exit terminal mode
   vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
+  local run_terminal = { buf = nil, job = nil }
+
+  local function run_terminal_alive()
+    return run_terminal.buf
+      and vim.api.nvim_buf_is_valid(run_terminal.buf)
+      and vim.bo[run_terminal.buf].buftype == 'terminal'
+      and run_terminal.job
+      and vim.fn.jobwait({ run_terminal.job }, 0)[1] == -1
+  end
+
+  local function focus_run_terminal()
+    if not run_terminal_alive() then
+      return false
+    end
+
+    local win = vim.fn.bufwinid(run_terminal.buf)
+    if win == -1 then
+      vim.cmd('botright split')
+      vim.api.nvim_win_set_buf(0, run_terminal.buf)
+      win = vim.api.nvim_get_current_win()
+    else
+      vim.api.nvim_set_current_win(win)
+    end
+
+    return true
+  end
+
+  local function ensure_run_terminal()
+    if focus_run_terminal() then
+      return run_terminal.buf, run_terminal.job
+    end
+
+    run_terminal.buf = nil
+    run_terminal.job = nil
+
+    vim.cmd('botright split | enew')
+    local buf = vim.api.nvim_get_current_buf()
+    local shell = vim.o.shell ~= '' and vim.o.shell or (os.getenv 'SHELL' or 'bash')
+    local job = vim.fn.termopen(shell, { cwd = vim.fn.getcwd() })
+
+    run_terminal.buf = buf
+    run_terminal.job = job
+    vim.b[buf].run_terminal = true
+
+    return buf, job
+  end
+
+  local function send_to_run_terminal(cmd)
+    local source_win = vim.api.nvim_get_current_win()
+    local _, job = ensure_run_terminal()
+    vim.fn.chansend(job, cmd .. '\r')
+    if vim.api.nvim_win_is_valid(source_win) then
+      vim.api.nvim_set_current_win(source_win)
+    end
+  end
+
+  local function send_to_new_terminal(cmd)
+    local source_win = vim.api.nvim_get_current_win()
+    vim.cmd('botright split | enew')
+    local shell = vim.o.shell ~= '' and vim.o.shell or (os.getenv 'SHELL' or 'bash')
+    local job = vim.fn.termopen(shell, { cwd = vim.fn.getcwd() })
+    if cmd then
+      vim.fn.chansend(job, cmd .. '\r')
+      if vim.api.nvim_win_is_valid(source_win) then
+        vim.api.nvim_set_current_win(source_win)
+      end
+    else
+      vim.cmd('startinsert')
+    end
+  end
+
+  vim.api.nvim_create_autocmd('BufDelete', {
+    callback = function(args)
+      if run_terminal.buf == args.buf then
+        run_terminal.buf = nil
+        run_terminal.job = nil
+      end
+    end,
+  })
+
+  local function get_visual_selection()
+    vim.cmd([[silent '<,'>yank x]])
+    return vim.trim(vim.fn.getreg('x'))
+  end
+
+  -- <leader>te: run current line (normal), selection (visual), or open terminal if line is empty.
+  vim.keymap.set('n', '<leader>te', function()
+    local cmd = vim.trim(vim.fn.getline('.'))
+    if cmd == '' then
+      ensure_run_terminal()
+      vim.cmd('startinsert')
+      return
+    end
+    send_to_run_terminal(cmd)
+  end, { desc = '[T]erminal [E]xecute line' })
+
+  vim.keymap.set('x', '<leader>te', function()
+    local cmd = get_visual_selection()
+    if cmd == '' then
+      vim.notify('No command selected', vim.log.levels.WARN)
+      return
+    end
+    send_to_run_terminal(cmd)
+  end, { desc = '[T]erminal [E]xecute selection' })
+
+  -- <leader>tE: same as te, but always in a fresh terminal split.
+  vim.keymap.set('n', '<leader>tE', function()
+    local cmd = vim.trim(vim.fn.getline('.'))
+    send_to_new_terminal(cmd ~= '' and cmd or nil)
+  end, { desc = '[T]erminal [E]xecute line (new split)' })
+
+  vim.keymap.set('x', '<leader>tE', function()
+    local cmd = get_visual_selection()
+    if cmd == '' then
+      vim.notify('No command selected', vim.log.levels.WARN)
+      return
+    end
+    send_to_new_terminal(cmd)
+  end, { desc = '[T]erminal [E]xecute selection (new split)' })
+
   -- TIP: Disable arrow keys in normal mode
   -- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
   -- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
@@ -377,7 +497,9 @@ do
     spec = {
       { '<leader>b', group = '[B]uffers' },
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
-      { '<leader>t', group = '[T]oggle' },
+      { '<leader>t', group = '[T]oggle / [T]erminal', mode = { 'n', 'x' } },
+      { '<leader>te', desc = '[T]erminal [E]xecute line / selection', mode = { 'n', 'x' } },
+      { '<leader>tE', desc = '[T]erminal [E]xecute in new split', mode = { 'n', 'x' } },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
@@ -819,9 +941,31 @@ end
 -- ============================================================
 do
   -- [[ Formatting ]]
+  local function parse_dotenv(path)
+    local vars = {}
+    local file = io.open(path, 'r')
+    if not file then
+      return vars
+    end
+    for line in file:lines() do
+      line = line:match('^%s*(.-)%s*$') or ''
+      if line ~= '' and not line:match('^#') then
+        local key, val = line:match('^([^=]+)=(.*)$')
+        if key then
+          key = key:match('^%s*(.-)%s*$')
+          val = val:match('^%s*(.-)%s*$')
+          val = val:gsub("^'(.*)'$", '%1'):gsub('^"(.*)"$', '%1')
+          vars[key] = val
+        end
+      end
+    end
+    file:close()
+    return vars
+  end
+
   vim.pack.add { gh 'stevearc/conform.nvim' }
   require('conform').setup {
-    notify_on_error = false,
+    notify_on_error = true,
     format_on_save = function(bufnr)
       -- You can specify filetypes to autoformat on save here:
       local enabled_filetypes = {
@@ -835,7 +979,7 @@ do
         typescript = true,
       }
       if enabled_filetypes[vim.bo[bufnr].filetype] then
-        return { timeout_ms = 500 }
+        return { timeout_ms = 1000 }
       else
         return nil
       end
@@ -851,8 +995,27 @@ do
       elixir = { 'mix' },
       heex = { 'mix' },
       eelixir = { 'mix' },
-      javascript = { { 'prettierd', 'prettier' }, { 'eslint_d', 'eslint' } },
-      typescript = { { 'prettierd', 'prettier' }, { 'eslint_d', 'eslint' } },
+      -- prettier then eslint; each name is a fallback if the prior tool is missing
+      javascript = { 'prettierd', 'prettier', 'eslint_d', 'eslint' },
+      typescript = { 'prettierd', 'prettier', 'eslint_d', 'eslint' },
+    },
+    -- mix format bootstraps the Mix project and loads config/*.exs. conform
+    -- replaces the subprocess env entirely when env is set, so copy the full
+    -- process environment and merge project .env (shell echo can show vars that
+    -- vim.env alone does not include).
+    formatters = {
+      mix = {
+        env = function(_, ctx)
+          local env = vim.fn.environ()
+          local root = vim.fs.root(ctx.dirname, { 'mix.exs' })
+          if root then
+            for key, val in pairs(parse_dotenv(root .. '/.env')) do
+              env[key] = val
+            end
+          end
+          return env
+        end,
+      },
     },
   }
 
