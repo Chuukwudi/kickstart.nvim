@@ -14,6 +14,9 @@ return {
         "emmet_ls",
         "prismals",
         "pyright",
+        "rust_analyzer",
+        "elixirls",
+        "kotlin_language_server",
         -- "eslint",
       },
     },
@@ -43,6 +46,7 @@ return {
         "black", -- python formatter
         "pylint",
         "eslint_d",
+        "ktlint", -- kotlin formatter/linter
       },
     },
     dependencies = {

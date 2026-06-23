@@ -11,6 +11,11 @@ return {
       typescriptreact = { "eslint_d" },
       svelte = { "eslint_d" },
       python = { "pylint" },
+      rust = { "clippy" },
+      elixir = { "credo" },
+      heex = { "credo" },
+      eex = { "credo" },
+      kotlin = { "ktlint" },
     }
 
     local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
@@ -54,6 +59,7 @@ return {
       if linters then
         -- remove_linter_if_missing_config_file(linters, "eslint_d", ".eslintrc.cjs")
         remove_linter_if_missing_config_file(linters, "eslint_d", "eslint.config.js")
+        remove_linter_if_missing_config_file(linters, "credo", ".credo.exs")
       end
 
       lint.try_lint(linters)

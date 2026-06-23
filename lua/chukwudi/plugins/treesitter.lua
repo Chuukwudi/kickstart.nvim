@@ -28,6 +28,10 @@ return {
       "query",
       "vimdoc",
       "c",
+      "rust",
+      "elixir",
+      "heex",
+      "kotlin",
     })
 
     vim.api.nvim_create_autocmd("FileType", {

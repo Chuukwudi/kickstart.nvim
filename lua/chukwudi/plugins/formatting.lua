@@ -20,6 +20,11 @@ return {
         liquid = { "prettier" },
         lua = { "stylua" },
         python = { "isort", "black" },
+        rust = { "rustfmt" },
+        elixir = { "mix" },
+        heex = { "mix" },
+        eex = { "mix" },
+        kotlin = { "ktlint" },
       },
       format_on_save = {
         lsp_fallback = true,
