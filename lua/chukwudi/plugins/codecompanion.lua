@@ -9,6 +9,12 @@ return {
     "CodeCompanionActions",
     "CodeCompanionCLI",
   },
+  keys = {
+    { "<leader>at", "<cmd>CodeCompanionChat Toggle<cr>", desc = "Toggle AI chat" },
+    { "<leader>ac", "<cmd>CodeCompanionChat<cr>", desc = "Open AI chat", mode = { "n", "v" } },
+    { "<leader>ab", "<cmd>CodeCompanionCLI<cr>", desc = "Open Claude Code CLI" },
+    { "<leader>ap", "<cmd>CodeCompanion<cr>", desc = "AI inline prompt", mode = { "n", "v" } },
+  },
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
@@ -101,12 +107,6 @@ return {
     require("codecompanion").setup(opts)
 
     local keymap = vim.keymap.set
-
-    keymap("n", "<leader>at", "<cmd>CodeCompanionChat Toggle<cr>", { desc = "Toggle AI chat" })
-    keymap("n", "<leader>ac", "<cmd>CodeCompanionChat<cr>", { desc = "Open AI chat" })
-    keymap("v", "<leader>ac", "<cmd>CodeCompanionChat<cr>", { desc = "Chat about visual selection" })
-    keymap("n", "<leader>ab", "<cmd>CodeCompanionCLI<cr>", { desc = "Open Claude Code CLI" })
-    keymap({ "n", "v" }, "<leader>ap", "<cmd>CodeCompanion<cr>", { desc = "AI inline prompt" })
 
     keymap("n", "<leader>gg", function()
       require("telescope.builtin").git_status()
