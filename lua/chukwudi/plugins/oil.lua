@@ -5,6 +5,9 @@ return {
   opts = {
     default_file_explorer = true,
     columns = { "icon" },
+    keymaps = {
+      ["gy"] = "actions.yank_entry",
+    },
   },
   config = function(_, opts)
     require("oil").setup(opts)

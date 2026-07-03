@@ -35,6 +35,50 @@
 | Normal | `<leader>ec` | Collapse file explorer                 |
 | Normal | `<leader>er` | Refresh file explorer                  |
 
+## File Explorer (oil.nvim)
+
+Oil is the default file explorer. Directories open in an editable buffer; save with `:w` to apply creates, renames, moves, and deletes.
+
+### Global
+
+| Mode   | Keymap | Description                              |
+| ------ | ------ | ---------------------------------------- |
+| Normal | `-`    | Open oil on parent directory             |
+| Normal | `:Oil` | Open oil (optional path, e.g. `:Oil .`)  |
+
+### Inside oil buffer
+
+| Mode   | Keymap  | Description                              |
+| ------ | ------- | ---------------------------------------- |
+| Normal | `g?`    | Show oil keymap help                     |
+| Normal | `<CR>`  | Open file or enter directory             |
+| Normal | `<C-s>` | Open in vertical split                   |
+| Normal | `<C-h>` | Open in horizontal split                 |
+| Normal | `<C-t>` | Open in new tab                          |
+| Normal | `<C-p>` | Toggle preview window                    |
+| Normal | `<C-c>` | Close oil and restore previous buffer    |
+| Normal | `<C-l>` | Refresh directory listing                |
+| Normal | `-`     | Go to parent directory                   |
+| Normal | `_`     | Open oil at Neovim cwd                   |
+| Normal | `` ` `` | `:cd` to current oil directory           |
+| Normal | `g~`    | `:tcd` to current oil directory (tab)    |
+| Normal | `gs`    | Change sort order                        |
+| Normal | `gx`    | Open entry in external program           |
+| Normal | `gy`    | Yank filepath under cursor               |
+| Normal | `g.`    | Toggle hidden files                      |
+| Normal | `g\`    | Toggle trash view for current directory  |
+
+### File operations (inside oil buffer)
+
+Edit the buffer like normal text, then `:w` to confirm changes.
+
+| Action | How                                                         |
+| ------ | ----------------------------------------------------------- |
+| Create | Insert a new line with the filename                         |
+| Delete | Delete the line                                             |
+| Rename | Edit the filename on the line                               |
+| Move   | Prefix the name with a path (e.g. `../other-dir/file.txt`)  |
+
 ## Telescope
 
 | Mode   | Keymap       | Description                        |
